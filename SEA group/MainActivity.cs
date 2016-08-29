@@ -1,77 +1,69 @@
-﻿using System;
-using Android.App;
-using Android.Content;
-using Android.Runtime;
-using Android.Views;
+﻿using Android.App;
 using Android.Webkit;
-using Android.Widget;
 using Android.OS;
-using SEA_group.Views;
-using SEA_group.Models;
+using Android.Views;
+using Android.Widget;
+using Android.Util;
+using Android.Graphics;
 
-namespace SEA_group
+
+
+namespace TestWebview
 {
-    [Activity(Label = "SEA_group", MainLauncher = true)]
-    public class MainActivity : Activity
+    [Activity(Label = "SEA group", MainLauncher = true, Icon = "@drawable/icon" )]
+    public class Activity1 : Activity
     {
+        WebView webviewMain;
+
         protected override void OnCreate(Bundle bundle)
         {
+
             base.OnCreate(bundle);
 
             // Set our view from the "main" layout resource
-            SetContentView(Resource.Layout.Main);
+            SetContentView(SEA_group.Resource.Layout.Main);
 
-            var webView = FindViewById<WebView>(Resource.Id.webView);
-            webView.Settings.JavaScriptEnabled = true;
-
-            // Use subclassed WebViewClient to intercept hybrid native calls
-            webView.SetWebViewClient(new HybridWebViewClient());
-
-            // Render the view from the type generated from RazorView.cshtml
-            var model = new Model1() { Text = "Text goes here" };
-            var template = new RazorView() { Model = model };
-            var page = template.GenerateString();
-
-            // Load the rendered HTML into the view with a base URL 
-            // that points to the root of the bundled Assets folder
-            webView.LoadDataWithBaseURL("file:///android_asset/", page, "text/html", "UTF-8", null);
+            webviewMain = FindViewById<WebView>(SEA_group.Resource.Id.webviewMain);
+            //啟用Javascript Enable
+            webviewMain.Settings.JavaScriptEnabled = true;
+            webviewMain.Settings.AllowFileAccess = true;
+            webviewMain.Settings.CacheMode = CacheModes.NoCache;
+            
+            //載入網址
+            webviewMain.LoadUrl("http://wows.ga");
+            // 請注意這行，如果不加入巢狀Class 會必成呼叫系統讓系統來裁決開啟http 的方式
+            webviewMain.SetWebViewClient(new CustWebViewClient());
 
         }
 
-        private class HybridWebViewClient : WebViewClient
+        /// <summary>
+        /// 覆寫使其back可以直接回上一頁並非預設的離開APP
+        /// </summary>
+        /// <param name="keyCode"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        public override bool OnKeyDown(Android.Views.Keycode keyCode, Android.Views.KeyEvent e)
         {
-            public override bool ShouldOverrideUrlLoading(WebView webView, string url)
+            if (keyCode == Keycode.Back && webviewMain.CanGoBack())
             {
-
-                // If the URL is not our own custom scheme, just let the webView load the URL as usual
-                var scheme = "hybrid:";
-
-                if (!url.StartsWith(scheme))
-                    return false;
-
-                // This handler will treat everything between the protocol and "?"
-                // as the method name.  The querystring has all of the parameters.
-                var resources = url.Substring(scheme.Length).Split('?');
-                var method = resources[0];
-                var parameters = System.Web.HttpUtility.ParseQueryString(resources[1]);
-
-                if (method == "UpdateLabel")
-                {
-                    var textbox = parameters["textbox"];
-
-                    // Add some text to our string here so that we know something
-                    // happened on the native part of the round trip.
-                    var prepended = string.Format("C# says \"{0}\"", textbox);
-
-                    // Build some javascript using the C#-modified result
-                    var js = string.Format("SetLabelText('{0}');", prepended);
-
-                    webView.LoadUrl("javascript:" + js);
-                }
-
+                webviewMain.GoBack();
                 return true;
             }
+            return base.OnKeyDown(keyCode, e);
+        }
+
+        /// <summary>
+        /// 巢狀Class 繼承WebViewClient
+        /// </summary>
+        private class CustWebViewClient : WebViewClient
+        {
+            public override bool ShouldOverrideUrlLoading(WebView view, string url)
+            {
+                view.LoadUrl(url);
+                return true;
+            }
+
         }
     }
 }
-
+    

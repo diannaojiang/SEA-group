@@ -27,10 +27,10 @@ namespace TestWebview
             //啟用Javascript Enable
             webviewMain.Settings.JavaScriptEnabled = true;
             webviewMain.Settings.AllowFileAccess = true;
-            webviewMain.Settings.CacheMode = CacheModes.NoCache;
+            webviewMain.Settings.CacheMode = CacheModes.Default;
             
             //載入網址
-            webviewMain.LoadUrl("http://wows.ga");
+            webviewMain.LoadUrl("https://sea-group.org/");
             // 請注意這行，如果不加入巢狀Class 會必成呼叫系統讓系統來裁決開啟http 的方式
             webviewMain.SetWebViewClient(new CustWebViewClient());
 
